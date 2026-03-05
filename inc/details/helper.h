@@ -3,6 +3,7 @@
 
 #include <ios>
 #include <iostream>
+#include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <vector>
@@ -11,25 +12,17 @@
 
 namespace cpon::detail {
 
-enum class JsonType : std::int8_t {
-	kUnknown = -2,
-	kBase = -1,
-	kInt = 0,
-	kDouble,
-	kBool,
-	kNull,
-	kStr,
-	kArr,
-	kObj
-};	// enum class JsonType
-
+void JsonWhat(std::wostream& stream, JsonBase* e); 
+	
 void JsonTagOutPut(std::wostream& stream, const std::wstring& tag);
+
+void JsonEndLine(std::wostream& stream);
+
+void JsonIndent(std::wostream& stream);
 
 void JsonArrOutPut(std::wostream& stream, const JsonArr::arr_type& arr);
 
 void JsonObjOutPut(std::wostream& stream, const JsonObj::obj_type& obj);
-
-void JsonEndLine(std::wostream& stream);
 
 template <typename Ty>
 void JsonValOutPut(std::wostream& stream, Ty val) {
@@ -37,13 +30,18 @@ void JsonValOutPut(std::wostream& stream, Ty val) {
 }
 
 template <>
-void JsonValOutPut(std::wostream& stream, bool val) {
+inline void JsonValOutPut<bool>(std::wostream& stream, bool val) {
 	stream << std::boolalpha << val << std::noboolalpha;
 }
 
 template <>
-void JsonValOutPut(std::wostream& stream, nullptr_t) {
+inline void JsonValOutPut<nullptr_t>(std::wostream& stream, nullptr_t) {
 	stream << L"null";
+}
+
+template <>
+inline void JsonValOutPut<const std::wstring&>(std::wostream& stream, const std::wstring& str) {
+	stream << "\"" << str << "\"";
 }
 
 template <typename Ty>

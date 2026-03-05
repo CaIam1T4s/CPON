@@ -8,6 +8,18 @@
 
 namespace cpon::detail {
 
+enum class JsonType : std::int8_t {
+	kUnknown = -2,
+	kBase = -1,
+	kInt = 0,
+	kDouble,
+	kBool,
+	kNull,
+	kStr,
+	kArr,
+	kObj
+};	// enum class JsonType
+
 // forward declaration
 class JsonBase;
 class JsonInt;
@@ -23,7 +35,6 @@ class JsonBase {
 public:
 	using tag_type   = std::wstring;
 	using self_type  = JsonBase;
-	using value_type = self_type;
 public:
 	friend auto operator<<(std::wostream& stream, const JsonBase& val) -> std::wostream&;
 	friend auto operator>>(std::wistream& stream, JsonBase& val) -> std::wistream&;
@@ -34,9 +45,10 @@ public:
 	JsonBase(JsonBase&&) noexcept                    = delete;
 	auto operator=(const JsonBase&) -> JsonBase&     = delete;
 	auto operator=(JsonBase&&) noexcept -> JsonBase& = delete;
+	[[nodiscard]] auto GetTag() const -> const std::wstring&;
+	[[nodiscard]] virtual auto GetJsonType() const -> JsonType = 0;
 public:
 	JsonBase(const tag_type& str);
-	virtual auto GetData() -> value_type = 0;
 private:
 	tag_type* m_tag;
 };	// class JsonBase
@@ -57,6 +69,8 @@ public:
 	auto operator=(JsonInt&&) noexcept -> JsonInt& = delete;
 public:
 	JsonInt(const std::wstring& str, int val);
+	[[nodiscard]] auto GetJsonType() const -> JsonType final;
+	[[nodiscard]] auto GetData() const -> value_type;
 private:
 	value_type m_data;
 };	// class JsonInt
@@ -77,6 +91,8 @@ public:
 	auto operator=(JsonDouble&&) noexcept -> JsonDouble& = delete;
 public:
 	JsonDouble(const std::wstring& str, double val);
+	[[nodiscard]] auto GetJsonType() const -> JsonType final;
+	[[nodiscard]] auto GetData() const -> value_type;
 private:
 	value_type m_data;
 };	// class JsonDouble
@@ -97,6 +113,8 @@ public:
 	auto operator=(JsonBool&&) noexcept -> JsonBool& = delete;
 public:
 	JsonBool(const std::wstring& str, bool val);
+	[[nodiscard]] auto GetJsonType() const -> JsonType final;
+	[[nodiscard]] auto GetData() const -> value_type;
 private:
 	value_type m_data;
 };	// class JsonBool
@@ -117,6 +135,8 @@ public:
 	auto operator=(JsonNull&&) noexcept -> JsonNull& = delete;
 public:
 	JsonNull(const std::wstring& str, nullptr_t val);
+	[[nodiscard]] auto GetJsonType() const -> JsonType final;
+	[[nodiscard]] auto GetData() const -> value_type;
 private:
 	value_type m_data;
 };	// class JsonNull
@@ -138,15 +158,17 @@ public:
 	auto operator=(JsonString&&) noexcept -> JsonString& = delete;
 public:
 	JsonString(const std::wstring& str, const std::wstring& val);
+	[[nodiscard]] auto GetJsonType() const -> JsonType final;
+	[[nodiscard]] auto GetData() const -> pointer;
 private:
 	pointer m_data;
 };	// class JsonString
 
 class JsonArr final : public JsonBase {
 public:
-	using arr_type  = std::vector<JsonBase*>;
-	using pointer   = std::vector<JsonBase*>*;
-	using self_type = JsonArr;
+	using arr_type   = std::vector<JsonBase*>;
+	using pointer    = std::vector<JsonBase*>*;
+	using self_type  = JsonArr;
 public:
 	friend auto operator<<(std::wostream& stream, const JsonDouble& val) -> std::wostream&;
 	friend auto operator>>(std::wistream& stream, JsonDouble& val) -> std::wistream&;
@@ -159,15 +181,17 @@ public:
 	auto operator=(JsonArr&&) noexcept -> JsonArr& = delete;
 public:
 	JsonArr(const std::wstring& str, pointer arr);
+	[[nodiscard]] auto GetJsonType() const -> JsonType final;
+	[[nodiscard]] auto GetData() const -> pointer;
 private:
 	pointer m_data;
 };	// class JsonArr
 
 class JsonObj final : public JsonBase	{
 public:
-	using obj_type  = std::vector<JsonBase*>;
-	using pointer   = std::vector<JsonBase*>*;
-	using self_type = JsonObj;
+	using obj_type   = std::vector<JsonBase*>;
+	using pointer    = std::vector<JsonBase*>*;
+	using self_type  = JsonObj;
 public:
 	friend auto operator<<(std::wostream& stream, const JsonDouble& val) -> std::wostream&;
 	friend auto operator>>(std::wistream& stream, JsonDouble& val) -> std::wistream&;
@@ -180,6 +204,8 @@ public:
 	auto operator=(JsonObj&&) noexcept -> JsonObj& = delete;
 public:
 	JsonObj(const std::wstring& str, pointer memList);
+	[[nodiscard]] auto GetJsonType() const -> JsonType final;
+	[[nodiscard]] auto GetData() const -> pointer;
 private:
 	pointer m_data;
 };	// class JsonObj
